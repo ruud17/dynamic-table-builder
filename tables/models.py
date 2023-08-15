@@ -14,7 +14,7 @@ from django.db import models
 
 def create_dynamic_model(table_name, fields):
     class Meta:
-        db_table = table_name
+        db_table = table_name.lower()  # Set the lowercase table name
 
     attrs = {'__module__': __name__, 'Meta': Meta}
 
