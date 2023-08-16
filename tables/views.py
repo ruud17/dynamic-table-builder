@@ -5,14 +5,14 @@ from rest_framework.viewsets import ModelViewSet
 from django.core.management import call_command
 from django.db import connection
 from django.apps import apps
-from .models import create_dynamic_model
-from .serializers import DynamicTableModelSerializer, GeneralSerializer
+from .models import create_dynamic_model, update_dynamic_model
+from .serializers import DynamicCreateTableModelSerializer, DynamicUpdateTableModelSerializer, GeneralSerializer
 from .utils import check_table_exists
 
 
 class CreateDynamicTableModel(APIView):
-    def post(self, request, format=None):
-        serializer = DynamicTableModelSerializer(data=request.data)
+    def post(self, request):
+        serializer = DynamicCreateTableModelSerializer(data=request.data)
 
         if serializer.is_valid():
             table_name = serializer.validated_data['table_name'].lower()
@@ -36,6 +36,27 @@ class CreateDynamicTableModel(APIView):
                 call_command('makemigrations', *args, **options)
 
                 return Response({"message": f"Table {table_name.lower()} generated successfully."},
+                                status=status.HTTP_201_CREATED)
+            except ValueError as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UpdateDynamicTableModel(APIView):
+    def put(self, request, id):
+        serializer = DynamicUpdateTableModelSerializer(data=request.data)
+        table_name = id
+        if serializer.is_valid():
+            fields = serializer.validated_data['fields']
+
+            if not check_table_exists(table_name):
+                return Response({"error": "Table does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                update_dynamic_model(table_name, fields)
+
+                return Response({"message": f"Table {id.lower()} updated successfully."},
                                 status=status.HTTP_201_CREATED)
             except ValueError as e:
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
