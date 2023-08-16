@@ -1,4 +1,5 @@
 from django.db import models
+from django.apps import apps
 
 """
 {
@@ -32,4 +33,7 @@ def create_dynamic_model(table_name, fields):
 
     model_class = type(table_name, (models.Model,), attrs)
 
+    # Register the dynamic model with the app label
+    apps.register_model(app_label='tables', model=model_class)
     return model_class
+

@@ -1,14 +1,16 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
 from django.core.management import call_command
 from django.db import connection
+from django.apps import apps
 from .models import create_dynamic_model
-from .serializers import DynamicTableModelSerializer
+from .serializers import DynamicTableModelSerializer, GeneralSerializer
 from .utils import check_table_exists
 
 
-class DynamicTableGenerationView(APIView):
+class CreateDynamicTableModel(APIView):
     def post(self, request, format=None):
         serializer = DynamicTableModelSerializer(data=request.data)
 
@@ -39,3 +41,19 @@ class DynamicTableGenerationView(APIView):
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GetAllRows(ModelViewSet):
+    @property
+    def model(self):
+        return apps.get_model(app_label=str('tables'), model_name=str(self.kwargs['id']), require_ready=False)
+
+    def get_queryset(self):
+        model = self.model
+        return model.objects.all()
+
+    def get_serializer_class(self):
+        GeneralSerializer.Meta.model = self.model
+        return GeneralSerializer
+
+
