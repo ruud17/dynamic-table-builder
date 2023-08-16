@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from django.db import connection
 from django.apps import apps
+from .apps import TablesConfig
 from .models import create_dynamic_model, update_dynamic_model
 from .serializers import DynamicCreateTableModelSerializer, DynamicUpdateTableModelSerializer, GeneralSerializer
 from .utils import check_table_exists, create_dynamic_table_migration
@@ -63,7 +64,7 @@ class UpdateDynamicTableModel(APIView):
 class GetAllRows(ModelViewSet):
     @property
     def model(self):
-        return apps.get_model(app_label=str('tables'), model_name=str(self.kwargs['id']), require_ready=False)
+        return apps.get_model(app_label=TablesConfig.name, model_name=str(self.kwargs['id']), require_ready=False)
 
     def get_queryset(self):
         model = self.model
