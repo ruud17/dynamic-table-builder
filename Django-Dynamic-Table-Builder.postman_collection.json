@@ -1,0 +1,73 @@
+{
+	"info": {
+		"_postman_id": "86a8cb03-3b2c-4991-ada2-f82d687f784a",
+		"name": "Django-Dynamic-Table-Builder",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "6813450"
+	},
+	"item": [
+		{
+			"name": "/api/table",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"table_name\": \"person\",\n    \"fields\": {\n        \"name\": \"string\",\n        \"age\": \"number\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8000/api/table"
+			},
+			"response": []
+		},
+		{
+			"name": "/api/table/:id",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"fields\":{\n        \"name\" : \"number\",\n        \"is_updated\": \"boolean\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8000/api/table/zec29"
+			},
+			"response": []
+		},
+		{
+			"name": "/api/table/:id/rows",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8000/api/table/slon/rows"
+			},
+			"response": []
+		},
+		{
+			"name": "/api/table/:id/row",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Person1\",\n    \"age\" :54\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8000/api/table/person/row"
+			},
+			"response": []
+		}
+	]
+}
