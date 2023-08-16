@@ -1,17 +1,9 @@
-from django.db import models, migrations, connection
+from django.db import models, connection
 from django.apps import apps
-from django.core.management import call_command
+from .utils import verify_and_get_field_type
+from .apps import TablesConfig
 
-"""
-{
-    "table_name": "DynamicTable",
-    "fields": {
-        "name": "string",
-        "age": "number",
-        "is_active": "boolean"
-    }
-}
-"""
+app_label = TablesConfig.name
 
 
 def create_dynamic_model(table_name, fields):
@@ -21,49 +13,29 @@ def create_dynamic_model(table_name, fields):
     attrs = {'__module__': __name__, 'Meta': Meta}
 
     for field_name, field_type in fields.items():
-        if field_type == 'string':
-            field = models.CharField(max_length=255)
-        elif field_type == 'number':
-            field = models.IntegerField()
-        elif field_type == 'boolean':
-            field = models.BooleanField(default=False)
-        else:
-            raise ValueError(f"Unsupported field type: {field_type}")
-
+        field = verify_and_get_field_type(field_type)
         attrs[field_name] = field
 
-    model_class = type(table_name, (models.Model,), attrs)
+    model_class = type(table_name, (models.Model,), attrs)  # generate dynamic model
 
-    # Register the dynamic model with the app label
-    apps.register_model(app_label='tables', model=model_class)
-    # apps.all_models[app_label][model_name] = dynamic_model
+    apps.register_model(app_label, model=model_class)  # Register the dynamic model
 
     return model_class
 
 
-
 def update_dynamic_model(model_name, new_fields):
-    # get model
-    app_label = "tables"
-    model = apps.get_model(app_label, model_name)
+    model = apps.get_model(app_label, model_name)  # get model
 
     existing_field_names = [field.name for field in model._meta.get_fields()]
 
     for field_name, field_type in new_fields.items():
-        if field_type == 'string':
-            field = models.CharField(max_length=255)
-        elif field_type == 'number':
-            field = models.IntegerField()
-        elif field_type == 'boolean':
-            field = models.BooleanField()
-        else:
-            raise ValueError(f"Unsupported field type: {field_type}")
+        field = verify_and_get_field_type(field_type)
 
         with connection.schema_editor() as schema_editor:
             if field_name in existing_field_names:
                 old_field = model._meta.get_field(field_name)
-                schema_editor.remove_field(model, old_field)
+                schema_editor.remove_field(model, old_field)  # remove existing field we want to update
 
             model.add_to_class(field_name, field)
             new_field = model._meta.get_field(field_name)
-            schema_editor.add_field(model, new_field)
+            schema_editor.add_field(model, new_field)  # add a field with a new type

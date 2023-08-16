@@ -2,12 +2,11 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
-from django.core.management import call_command
 from django.db import connection
 from django.apps import apps
 from .models import create_dynamic_model, update_dynamic_model
 from .serializers import DynamicCreateTableModelSerializer, DynamicUpdateTableModelSerializer, GeneralSerializer
-from .utils import check_table_exists
+from .utils import check_table_exists, create_dynamic_table_migration
 
 
 class CreateDynamicTableModel(APIView):
@@ -29,11 +28,7 @@ class CreateDynamicTableModel(APIView):
                 with connection.schema_editor() as schema_editor:
                     schema_editor.create_model(model_class)
 
-                # Prepare the arguments and options for the call_command function
-                args = [app_label]
-                options = {'name': f'create_dynamic_table_{table_name}', 'no_input': True}
-                # Call the makemigrations command with the provided arguments and options
-                call_command('makemigrations', *args, **options)
+                create_dynamic_table_migration(app_label, table_name)  # generate migration
 
                 return Response({"message": f"Table {table_name.lower()} generated successfully."},
                                 status=status.HTTP_201_CREATED)
@@ -47,6 +42,7 @@ class UpdateDynamicTableModel(APIView):
     def put(self, request, id):
         serializer = DynamicUpdateTableModelSerializer(data=request.data)
         table_name = id
+
         if serializer.is_valid():
             fields = serializer.validated_data['fields']
 
